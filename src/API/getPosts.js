@@ -5,7 +5,7 @@ import { Cookies } from "react-cookie";
 const cookies = new Cookies();
 
 export async function getPosts({ id }) {
-  const data = await axios.get(`http://34.125.241.76/post/${id}`, {
+  const data = await axios.get(`http://localhost:8080/post/${id}`, {
     params: { postId: id },
   });
 

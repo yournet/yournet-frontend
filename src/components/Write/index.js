@@ -4,10 +4,8 @@ import { usePostPost } from "../../hooks/usePostPost";
 
 function Write() {
   const cookies = new Cookies();
-  // onChange로 관리할 문자열
-  // const [hashtag, setHashtag] = useState("");
-  // 해시태그를 담을 배열
   const [hashArr, setHashArr] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     console.log(cookies.get("token"));
@@ -17,101 +15,94 @@ function Write() {
     title: "",
     content: "",
     hashtag: "",
-    // hashtag: [{ name: "" }],
   });
+
   const { title, content, hashtag } = postInfo;
   const { mutate } = usePostPost();
 
-  function handleInput(e) {
+  const handleInput = (e) => {
     const { value, name } = e.target;
-    console.log(e.target.value);
     setPostInfo({ ...postInfo, [name]: value });
-  }
+  };
 
-  function postSubmit(e) {
+  const postSubmit = (e) => {
     e.preventDefault();
-    mutate({ title, content, hashtag: hashArr });
-  }
+    const postData = {
+      title,
+      content,
+      hashTag: hashArr.map(tag => ({ name: tag })),
+      ...selectedImage,
+    };
+    mutate(postData);
+  };
 
   const onKeyUp = useCallback(
-    (e) => {
-      // if (process.browser) {
-      /* 요소 불러오기, 만들기*/
-      const $HashWrapOuter = document.querySelector(".HashWrapOuter");
-      const $HashWrapInner = document.createElement("div");
-      $HashWrapInner.className = "HashWrapInner";
+      (e) => {
+        const $HashWrapOuter = document.querySelector(".HashWrapOuter");
+        const $HashWrapInner = document.createElement("div");
+        $HashWrapInner.className = "HashWrapInner";
+        $HashWrapInner.addEventListener("click", () => {
+          $HashWrapOuter?.removeChild($HashWrapInner);
+          setHashArr(hashArr.filter((tag) => tag !== $HashWrapInner.innerHTML.replace(/^#/, '')));
+        });
 
-      /* 태그를 클릭 이벤트 관련 로직 */
-      $HashWrapInner.addEventListener("click", () => {
-        $HashWrapOuter?.removeChild($HashWrapInner);
-        console.log($HashWrapInner.innerHTML);
-        setHashArr(hashArr.filter((hashtag) => hashtag));
-      });
-
-      /* enter 키 코드 :13 */
-      if (e.keyCode === 13 && e.target.value.trim() !== "") {
-        console.log("Enter Key 입력됨!", e.target.value);
-        $HashWrapInner.innerHTML = "#" + e.target.value;
-        $HashWrapOuter?.appendChild($HashWrapInner);
-        setHashArr((hashArr) => [...hashArr, hashtag]);
-        setPostInfo({ ...postInfo, hashtag: "" });
-      }
-      // }
-    },
-    [hashtag, hashArr, postInfo]
+        if (e.keyCode === 13 && e.target.value.trim() !== "") {
+          $HashWrapInner.innerHTML = "#" + e.target.value;
+          $HashWrapOuter?.appendChild($HashWrapInner);
+          setHashArr([...hashArr, e.target.value.trim()]);
+          setPostInfo({ ...postInfo, hashtag: "" });
+        }
+      },
+      [hashtag, hashArr, postInfo]
   );
+
+  const handleImageSelect = (imageData) => {
+    setSelectedImage(imageData);
+  };
+
+  // 여기에 이미지 선택 로직을 추가할 수 있습니다. 예를 들어, 버튼 클릭 시 handleImageSelect 함수를 호출하도록 설정합니다.
 
   return (
-    <div className="flex justify-center items-center flex-col">
-      <div className="mt-10">게시물 작성</div>
-      <div className="container flex max-w-[400px] flex-col gap-3 rounded-md p-6">
-        <label htmlFor="title" className="text-sm text-gray-800 flex flex-col">
+      <div className="flex justify-center items-center flex-col">
+        <div className="mt-10">게시물 작성</div>
+        <div className="container flex max-w-[400px] flex-col gap-3 rounded-md p-6">
           <input
-            // required
-            placeholder="제목"
-            className="w-full rounded-md border bg-gray-50 p-2"
-            id="emtitleail"
-            name="title"
-            type="text"
-            value={title}
-            onChange={handleInput}
+              placeholder="제목"
+              className="w-full rounded-md border bg-gray-50 p-2"
+              name="title"
+              type="text"
+              value={title}
+              onChange={handleInput}
           />
-        </label>
-        <div className="HashWrap">
-          <div className="HashWrapOuter"></div>
-          <input
-            className="HashInput"
-            type="text"
-            value={hashtag}
-            name="hashtag"
-            onChange={handleInput}
-            onKeyUp={onKeyUp}
-            placeholder="해시태그 입력"
-          />
-        </div>
-        <label
-          htmlFor="content"
-          className="text-sm text-gray-800 flex flex-col"
-        >
+          <div className="HashWrap">
+            <div className="HashWrapOuter"></div>
+            <input
+                className="HashInput"
+                type="text"
+                value={hashtag}
+                name="hashtag"
+                onChange={handleInput}
+                onKeyUp={onKeyUp}
+                placeholder="해시태그 입력"
+            />
+          </div>
           <textarea
-            placeholder="내용"
-            style={{ height: "70vh" }}
-            className="w-full rounded-md border bg-gray-50 p-2"
-            id="content"
-            name="content"
-            value={content}
-            onChange={handleInput}
+              placeholder="내용"
+              className="w-full rounded-md border bg-gray-50 p-2"
+              style={{ height: "70vh" }}
+              name="content"
+              value={content}
+              onChange={handleInput}
           />
-        </label>
-        <button
-          className="mt-2 w-full rounded-md bg-[#578e2d] p-2 text-sm text-white font-bold"
-          type="submit"
-          onClick={postSubmit}
-        >
-          작성
-        </button>
+          <button
+              className="mt-2 w-full rounded-md bg-[#578e2d] p-2 text-sm text-white font-bold"
+              onClick={postSubmit}
+          >
+            작성
+          </button>
+        </div>
       </div>
-    </div>
   );
 }
+
 export default Write;

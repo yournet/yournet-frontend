@@ -7,7 +7,7 @@ const cookies = new Cookies();
 export async function getRecommend() {
   const userId = cookies.get("userId");
   const data = await axios.get(
-    `http://34.125.163.240/users/${userId}/recommend`,
+    `http://localhost:8080/users/${userId}/recommend`,
     {
       headers: { Authorization: `${cookies.get("token")}` },
     }

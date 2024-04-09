@@ -23,7 +23,7 @@ function Read() {
             }}
             className="ml-8 text-2xl font-semibold text-[#578e2d] mt-10"
           >
-            Yournet
+            CHORA
           </div>
           <Post
             postId={data?.id}
