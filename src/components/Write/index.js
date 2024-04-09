@@ -1,15 +1,32 @@
 import { useCallback, useEffect, useState } from "react";
 import { Cookies } from "react-cookie";
+import axios from "axios";
 import { usePostPost } from "../../hooks/usePostPost";
 
 function Write() {
   const cookies = new Cookies();
   const [hashArr, setHashArr] = useState([]);
+  const [images, setImages] = useState([]); // 이미지 목록을 저장하는 상태
   const [selectedImage, setSelectedImage] = useState(null);
+  const [file, setFile] = useState(null); // Added to handle file input
 
   useEffect(() => {
     console.log(cookies.get("token"));
-  });
+    fetchImages();
+  }, []);
+
+  const fetchImages = async () => {
+    try {
+      const response = await axios.get("http://your-server-url/post/image", {
+        headers: {
+          "Authorization": `Bearer ${cookies.get("token")}`
+        }
+      });
+      setImages(response.data);
+    } catch (error) {
+      console.error("이미지 로드 실패:", error);
+    }
+  };
 
   const [postInfo, setPostInfo] = useState({
     title: "",
@@ -56,16 +73,44 @@ function Write() {
       [hashtag, hashArr, postInfo]
   );
 
-  const handleImageSelect = (imageData) => {
-    setSelectedImage(imageData);
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
   };
 
-  // 여기에 이미지 선택 로직을 추가할 수 있습니다. 예를 들어, 버튼 클릭 시 handleImageSelect 함수를 호출하도록 설정합니다.
+  const uploadImage = async () => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post("http://your-server-url/post/image", formData, {
+        headers: {
+          "Authorization": `Bearer ${cookies.get("token")}`,
+          "Content-Type": "multipart/form-data",
+        }
+      });
+      setImages([...images, ...response.data]); // Add new images to the existing list
+      alert("Image uploaded successfully.");
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      alert("Failed to upload image.");
+    }
+  };
+
+  const selectImage = (image) => {
+    setSelectedImage(image);
+  };
 
   return (
       <div className="flex justify-center items-center flex-col">
         <div className="mt-10">게시물 작성</div>
         <div className="container flex max-w-[400px] flex-col gap-3 rounded-md p-6">
+          <input type="file" onChange={handleFileChange} />
+          <button onClick={uploadImage}>Upload Image</button>
+          {images.map((image, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <img src={image.url} alt={`Prompt: ${image.prompt}`} onClick={() => selectImage(image)} style={{width: 100, height: 100, cursor: 'pointer'}} />
+              </div>
+          ))}
           <input
               placeholder="제목"
               className="w-full rounded-md border bg-gray-50 p-2"
